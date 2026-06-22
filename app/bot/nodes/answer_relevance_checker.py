@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel
@@ -12,17 +12,15 @@ class AnswerRelevance(BaseModel):
     decision: Literal[
         "FULLY_SUPPORTED", "PARTIALLY_SUPPORTED", "NOT_SUPPORTED"
     ]
+    evidence: List[str]
 
 
 async def answer_relevance_checker(state: RAGState):
     logger.info("Checking answer relevance...")
 
     question = state["question"]
-    answer = await str_parser.ainvoke(state["messages"][-1])
-    context = "\n\n".join(map(
-        lambda x: x.page_content,
-        state["relevant_docs"]
-    ))
+    answer = state["answer"]
+    context = state["context_str"]
 
     response: AnswerRelevance = await llm_model.with_structured_output(
         AnswerRelevance).ainvoke([

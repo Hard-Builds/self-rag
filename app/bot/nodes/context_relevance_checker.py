@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate, \
 from pydantic import BaseModel, Field
 
 from app.bot import RAGState
-from app.bot.llm import llm_model, str_parser
+from app.bot.llm import llm_model
 from app.core import logger
 
 
@@ -51,4 +51,10 @@ async def context_relevance_checker(state: RAGState):
 
     logger.info(f"Relevant docs found: {len(relevant_docs)}/"
                 f"{len(state["docs"])}")
-    return {"relevant_docs": relevant_docs}
+    return {
+        "relevant_docs": relevant_docs,
+        "context_str": "\n\n".join(map(
+            lambda x: x.page_content,
+            relevant_docs
+        )).strip()
+    }

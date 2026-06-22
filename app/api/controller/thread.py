@@ -51,6 +51,7 @@ class ThreadController:
                             "db": session,
                             "user_id": user_id,
                             "stream_queue": queue,
+                            "recursion_limit": 3,
                         }}
                     )
                     await session.commit()
