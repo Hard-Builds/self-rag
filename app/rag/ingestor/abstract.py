@@ -29,8 +29,8 @@ class BaseIngestor(ABC):
             document_id: str | UUID,
             filename: str,
             file_path: str,
-            chunk_size: int = 1000,
-            chunk_overlap: int = 100
+            chunk_size: int = settings.CHUNK_SIZE,
+            chunk_overlap: int = settings.CHUNK_OVERLAP
     ):
         self.user_id = user_id
         self.document_id = document_id
