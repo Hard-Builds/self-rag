@@ -1,59 +1,56 @@
-# Self-RAG
+# Self-RAG — NexaAI Assistant
 
-A production-ready **Self-Retrieval-Augmented Generation** API. Unlike standard RAG, every step is graded — the system decides whether to retrieve, which docs are relevant, whether the answer is grounded, and whether it actually answers the question. If any check fails, it corrects itself before responding.
+A production-ready **Self-Retrieval-Augmented Generation** API built for **NexaAI**, a dummy company used as the knowledge base for this project. The bot answers questions about NexaAI by grounding every response in three internal PDF documents:
+
+| Document | Contents |
+|---|---|
+| Company Policy | Internal policies, HR rules, and operational guidelines |
+| Company Profile | About NexaAI — mission, team, and background |
+| Product & Pricing | Product offerings, plans, and pricing details |
+
+Unlike standard RAG, every step is graded — the system decides whether to retrieve, which docs are relevant, whether the answer is grounded, and whether it actually answers the question. If any check fails, it corrects itself before responding.
 
 Built with **FastAPI**, **LangGraph**, **PostgreSQL + pgvector**, and **Google Gemini**.
+
+> Based on the paper: **Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection**
+> Asai et al., 2023 — [arxiv.org/pdf/2310.11511](https://arxiv.org/pdf/2310.11511)
 
 ---
 
 ## Graph
 
 ```mermaid
----
-config:
-  flowchart:
-    curve: linear
----
-graph TD;
-    __start__([__start__]):::first
-    upsert_thread(upsert_thread)
-    should_retrieve(should_retrieve)
-    generate_direct(generate_direct)
-    context_retriever(context_retriever)
-    context_relevance_checker(context_relevance_checker)
-    no_answer_found(no_answer_found)
-    generate_from_context(generate_from_context)
-    answer_relevance_checker(answer_relevance_checker)
-    rewrite_answer(rewrite_answer)
-    stream_answer(stream_answer)
-    check_answer_usefulness(check_answer_usefulness)
-    rewrite_question(rewrite_question)
-    __end__([__end__]):::last
+flowchart TD
+    A([__start__]) --> B[upsert_thread]
+    B --> C[should_retrieve]
 
-    __start__ --> upsert_thread
-    upsert_thread --> should_retrieve
-    should_retrieve -. True .-> context_retriever
-    should_retrieve -. False .-> generate_direct
-    generate_direct --> __end__
-    context_retriever --> context_relevance_checker
-    context_relevance_checker -. True .-> generate_from_context
-    context_relevance_checker -. False .-> no_answer_found
-    generate_from_context --> answer_relevance_checker
-    answer_relevance_checker -.-> check_answer_usefulness
-    answer_relevance_checker -.-> rewrite_answer
-    rewrite_answer --> answer_relevance_checker
-    check_answer_usefulness -.-> stream_answer
-    check_answer_usefulness -.-> no_answer_found
-    check_answer_usefulness -.-> rewrite_question
-    rewrite_question --> context_retriever
-    stream_answer --> __end__
-    no_answer_found --> __end__
+    C -->|need_retrieval: true| D[context_retriever]
+    C -->|need_retrieval: false| K[generate_direct]
 
-    classDef default fill:#f2f0ff,line-height:1.2
-    classDef first fill-opacity:0
-    classDef last fill:#bfb6fc
+    D --> E[context_relevance_checker]
+
+    E -->|relevant docs found| F[generate_from_context]
+    E -->|no relevant docs| J[no_answer_found]
+
+    F --> G[answer_relevance_checker]
+
+    G -->|FULLY_SUPPORTED| H[check_answer_usefulness]
+    G -->|PARTIALLY / NOT_SUPPORTED| G2[rewrite_answer]
+    G2 -->|max 3 iterations| G
+
+    H -->|is_useful: true| I[stream_answer]
+    H -->|is_useful: false, retries left| L[rewrite_question]
+    H -->|is_useful: false, max retries| J
+
+    L --> D
+
+    I --> Z([__end__])
+    J --> Z
+    K --> Z
 ```
+### Preview
 
+![RAG Bot UI](assets/preview.png)
 ---
 
 ## How It Works
