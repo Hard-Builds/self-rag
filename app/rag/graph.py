@@ -6,7 +6,8 @@ from app.bot import RAGState
 from app.bot.nodes import generate_direct, decide_retrieve, context_retriever, \
     upsert_thread, generate_from_context, no_answer_found, \
     answer_relevance_checker, context_relevance_checker, rewrite_answer, \
-    stream_answer
+    stream_answer, check_answer_usefulness, rewrite_question, \
+    rewrite_answer_router, rewrite_question_router
 
 
 class RAGGraph:
@@ -35,6 +36,8 @@ class RAGGraph:
         builder.add_node("answer_relevance_checker", answer_relevance_checker)
         builder.add_node("rewrite_answer", rewrite_answer)
         builder.add_node("stream_answer", stream_answer)
+        builder.add_node("check_answer_usefulness", check_answer_usefulness)
+        builder.add_node("rewrite_question", rewrite_question)
 
         builder.add_edge(START, "upsert_thread")
         builder.add_edge("upsert_thread", "should_retrieve")
@@ -62,16 +65,24 @@ class RAGGraph:
 
         builder.add_conditional_edges(
             "answer_relevance_checker",
-            lambda state: state["answer_relevance"],
+            rewrite_answer_router,
             {
-                "FULLY_SUPPORTED": "stream_answer",
-                "PARTIALLY_SUPPORTED": "rewrite_answer",
-                "NOT_SUPPORTED": "rewrite_answer",
+                "check_answer_usefulness": "check_answer_usefulness",
+                "rewrite_answer": "rewrite_answer",
             }
         )
 
         builder.add_edge("rewrite_answer", "answer_relevance_checker")
-        builder.add_edge("stream_answer", END)
+        builder.add_conditional_edges(
+            "check_answer_usefulness",
+            rewrite_question_router,
+            {
+                "stream_answer": "stream_answer",
+                "no_answer_found": "no_answer_found",
+                "rewrite_question": "rewrite_question"
+            }
+        )
+        builder.add_edge("rewrite_question", "context_retriever")
         builder.add_edge("generate_direct", END)
         builder.add_edge("no_answer_found", END)
 

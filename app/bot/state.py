@@ -8,6 +8,10 @@ class RAGState(MessagesState):
     question: str
     answer: str
 
+    # Question rewriting
+    retrieval_query: str
+    rewrite_tries: int
+
     need_retrieval: bool
     docs: List[Document]
     relevant_docs: List[Document]
@@ -18,4 +22,8 @@ class RAGState(MessagesState):
     ]
 
     # answer rewriting
-    ans_iteration: int = 0
+    ans_iteration: int
+
+    # Answer usefulness
+    is_ans_useful: bool
+    reason: str

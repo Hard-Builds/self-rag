@@ -6,8 +6,17 @@ from app.bot import RAGState
 from app.bot.llm import llm_model, str_parser
 from app.core import logger
 
-MAX_ANS_ITERATION = 3
+_MAX_ANS_ITERATION = 3
 
+
+async def rewrite_answer_router(state: RAGState):
+    if state["answer_relevance"] == "FULLY_SUPPORTED":
+        return "check_answer_usefulness"
+
+    if state["ans_iteration"] < _MAX_ANS_ITERATION:
+        return "rewrite_answer"
+
+    return "check_answer_usefulness"
 
 async def rewrite_answer(state: RAGState):
     logger.info("Rewriting answer...")

@@ -11,7 +11,7 @@ async def context_retriever(state: RAGState, config: RunnableConfig):
     context_docs = await Retriever.get(
         db=config["db"],
         user_id=config["user_id"],
-        query=state["question"],
+        query=state.get("retrieval_query") or state["question"],
         top_k=3
     )
     return {"docs": context_docs}
