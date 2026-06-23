@@ -72,6 +72,25 @@ The final approved answer is streamed to the client in one shot. The answer is h
 
 ---
 
+## Node Reference
+
+| Node | Description |
+|---|---|
+| `upsert_thread` | Creates or loads the conversation thread and its message history. |
+| `should_retrieve` | LLM decides if the question needs document retrieval or can be answered directly (e.g. greetings, general knowledge). |
+| `generate_direct` | Generates a response without any context — used for conversational or general questions. |
+| `context_retriever` | Runs a vector similarity search against the NexaAI PDFs using the original question or a rewritten query. Returns top-3 chunks. |
+| `context_relevance_checker` | Checks each retrieved chunk independently (parallel LLM calls) and filters out irrelevant ones. |
+| `generate_from_context` | Generates an answer strictly from the relevant chunks. Instructed not to use outside knowledge. |
+| `answer_relevance_checker` | Grades the answer as `FULLY_SUPPORTED`, `PARTIALLY_SUPPORTED`, or `NOT_SUPPORTED` against the context. Catches hallucinations and unsupported claims. |
+| `rewrite_answer` | Revises the answer to remove unsupported or interpretive claims, keeping only direct quotes from context. Loops back to `answer_relevance_checker` (max 3 times). |
+| `check_answer_usefulness` | Checks whether the grounded answer actually addresses what the user asked. A factually correct answer can still be off-topic. |
+| `rewrite_question` | Rewrites the original question into a better retrieval query with domain-specific keywords. Resets doc state and loops back to `context_retriever` (max 3 times). |
+| `stream_answer` | Pushes the final approved answer to the SSE stream queue and persists it to the database. |
+| `no_answer_found` | Terminal node returned when no relevant docs exist or all rewrite attempts are exhausted. |
+
+---
+
 ## Stack
 
 | | |
