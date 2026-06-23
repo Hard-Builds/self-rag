@@ -33,14 +33,10 @@ class Settings(BaseSettings):
     CONTEXT_EVAL_HIGHER_THR: float = 0.7
     CONTEXT_EVAL_LOWER_THR: float = 0.3
 
-    # Web search tool
-    TAVILY_API_KEY: str
-
     # llm
     GEMINI_API_KEY: str | None = None
     GEMINI_MODEL: str | None = None
     GEMINI_EMBEDDING_MODEL: str | None = None
-    GEMINI_IMAGE_MODEL: str | None = None
 
     def validate_env_variables(self) -> None:
         required = {

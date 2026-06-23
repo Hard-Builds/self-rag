@@ -1,4 +1,3 @@
-import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -52,7 +51,7 @@ async def get_thread_conversation(
 async def query(
         request: Request,
         body: QueryRequest,
-        thread_id: uuid.UUID,
+        thread_id: UUID,
         db: AsyncSession = Depends(DBClient.get_db_session)
 ):
     thread_controller = ThreadController(db)

@@ -4,6 +4,14 @@ const CONFIG = {
   TOKEN: "dev-token", // backend ignores token value for now
 };
 
+function randomUUID() {
+  if (crypto.randomUUID) return randomUUID();
+  // fallback for non-secure contexts (HTTP + IP address)
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+    (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+  );
+}
+
 // ── State ─────────────────────────────────────────────────
 const state = {
   threads: [],          // [{ id, title }, ...]
@@ -122,9 +130,9 @@ function scrollToBottom() {
 // ── Send message ──────────────────────────────────────────
 async function sendMessage(query) {
   const isNewThread = !state.activeThreadId;
-  const threadId = state.activeThreadId ?? crypto.randomUUID();
+  const threadId = state.activeThreadId ?? randomUUID();
 
-  const humanMsg = { id: crypto.randomUUID(), role: "human", content: query };
+  const humanMsg = { id: randomUUID(), role: "human", content: query };
   setState({ messages: [...state.messages, humanMsg], isLoading: true, activeThreadId: threadId });
   showChatPanel();
 
@@ -152,7 +160,7 @@ async function sendMessage(query) {
 
     if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
 
-    const aiMsg = { id: crypto.randomUUID(), role: "ai", content: "" };
+    const aiMsg = { id: randomUUID(), role: "ai", content: "" };
     setState({ messages: [...state.messages, aiMsg] });
     renderMessages();
 
@@ -176,7 +184,7 @@ async function sendMessage(query) {
       setTimeout(() => loadThreads({ preservePlaceholders: true }), 3000);
     }
   } catch (err) {
-    const errMsg = { id: crypto.randomUUID(), role: "ai", content: `Error: ${err.message}` };
+    const errMsg = { id: randomUUID(), role: "ai", content: `Error: ${err.message}` };
     setState({ messages: [...state.messages, errMsg], isLoading: false });
     renderMessages();
   } finally {

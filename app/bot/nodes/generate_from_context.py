@@ -1,10 +1,9 @@
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, \
     HumanMessagePromptTemplate
-from langchain_core.runnables import RunnableConfig
-from sentry_sdk import logger
 
 from app.bot import RAGState
+from app.core import logger
 from app.bot.llm import llm_model, str_parser
 
 
