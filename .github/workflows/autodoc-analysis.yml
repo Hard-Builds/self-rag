@@ -48,8 +48,15 @@ jobs:
           restore-keys: |
             venv-${{ runner.os }}-
       
-      - name: Install dependencies                                                             
-        working-directory: autodoc-agent                                                       
+      - name: Debug env vars
+        run: |
+          echo "GEMINI_API_KEY set: ${{ secrets.GEMINI_API_KEY != '' }}"
+          echo "GH_APP_ID set: ${{ secrets.GH_APP_ID != '' }}"
+          echo "GH_APP_PRIVATE_KEY set: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}"
+          echo "GH_APP_INSTALLATION_ID set: ${{ secrets.GH_APP_INSTALLATION_ID != '' }}"
+
+      - name: Install dependencies
+        working-directory: autodoc-agent
         run: uv sync                                                                           
                                                                                                
       - name: Run analysis
