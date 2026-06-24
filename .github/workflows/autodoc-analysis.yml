@@ -41,6 +41,9 @@ jobs:
           GH_APP_ID: ${{ secrets.GH_APP_ID }}                                                  
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}                        
           GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
         run: |                                                                                 
             uv run python main.py --owner "${{ github.event.repository.owner.login }}" --repo "${{ github.event.repository.name }}" --pr "${{ github.event.pull_request.number }}" --mode analyze                                                                     
                                                                                                  
