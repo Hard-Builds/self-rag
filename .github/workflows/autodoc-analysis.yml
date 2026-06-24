@@ -14,7 +14,8 @@ jobs:
       - uses: actions/checkout@v4                                                              
         with:                                                                                  
           repository: Hard-Builds/autodoc-agent                                                
-          path: autodoc-agent                                                                  
+          path: autodoc-agent   
+          token: ${{ secrets.GITHUB_TOKEN }}
                                                                                                
       - uses: astral-sh/setup-uv@v4                                                            
         with:                                                                                  
