@@ -5,6 +5,10 @@ on:
     types: [submitted]
 
 jobs:
-  update:
+  update:                                                                     
+    runs-on: ubuntu-latest
     if: github.event.review.state == 'approved'
     environment: autodoc-approval
+    permissions:                                                                               
+        pull-requests: write                                                                     
+        contents: write  
