@@ -1,13 +1,14 @@
 name: AutoDoc Update
 
 on:
-  pull_request_review:
-    types: [submitted]
+  issue_comment:
+    types: [created]
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    if: contains(github.event.review.body, '/approve-autodoc')
+    if: github.event.issue.pull_request && github.event.comment.body == '/approve-autodoc' && github.event.sender.login != 'hardik-auto-doc-agent'
+    environment: autodoc-approval
     permissions:
       pull-requests: write
       contents: write
