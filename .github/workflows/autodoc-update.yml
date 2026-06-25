@@ -7,7 +7,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    if: github.event.review.state == 'approved'
+    if: contains(github.event.review.body, '/approve-autodoc')
     environment: autodoc-approval
     permissions:
       pull-requests: write
@@ -56,11 +56,28 @@ jobs:
         working-directory: autodoc-agent
         run: uv sync
 
+      - name: Find analysis run ID
+        id: find-run
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          RUN_ID=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow "autodoc-analysis.yml" \
+            --branch "${{ github.event.pull_request.head.ref }}" \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
       - name: Download checkpoint
         uses: actions/download-artifact@v4
         with:
           name: checkpoint-${{ github.event.pull_request.number }}
           path: autodoc-agent
+          run-id: ${{ steps.find-run.outputs.run_id }}
+          github-token: ${{ steps.app-token.outputs.token }}
 
       - name: Run update
         working-directory: autodoc-agent
