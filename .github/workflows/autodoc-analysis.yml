@@ -1,9 +1,9 @@
-name: AutoDoc Analysis                                                                         
-                                                                                                 
-on:                                                                                            
-  pull_request:                                                                                
-    types: [opened, synchronize]                                                               
-                                                                                               
+name: AutoDoc Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -20,6 +20,7 @@ jobs:
       LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
       LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
       LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
+
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -30,16 +31,18 @@ jobs:
           owner: Hard-Builds
           repositories: autodoc-agent
 
-      - uses: actions/checkout@v4
+      - name: Checkout autodoc-agent
+        uses: actions/checkout@v4
         with:
           repository: Hard-Builds/autodoc-agent
           path: autodoc-agent
           token: ${{ steps.app-token.outputs.token }}
-                                                                                               
-      - uses: astral-sh/setup-uv@v4                                                            
-        with:                                                                                  
-          python-version: "3.12"                                                               
-                                                                                         
+
+      - name: Set up Python via uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+
       - name: Cache uv virtualenv
         uses: actions/cache@v4
         with:
@@ -47,25 +50,22 @@ jobs:
           key: venv-${{ runner.os }}-${{ hashFiles('autodoc-agent/uv.lock') }}
           restore-keys: |
             venv-${{ runner.os }}-
-      
-      - name: Debug env vars
-        run: |
-          echo "GEMINI_API_KEY set: ${{ secrets.GEMINI_API_KEY != '' }}"
-          echo "GH_APP_ID set: ${{ secrets.GH_APP_ID != '' }}"
-          echo "GH_APP_PRIVATE_KEY set: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}"
-          echo "GH_APP_INSTALLATION_ID set: ${{ secrets.GH_APP_INSTALLATION_ID != '' }}"
 
       - name: Install dependencies
         working-directory: autodoc-agent
-        run: uv sync                                                                           
-                                                                                               
+        run: uv sync
+
       - name: Run analysis
         working-directory: autodoc-agent
         run: |
-          uv run python main.py --owner "${{ github.event.repository.owner.login }}" --repo "${{ github.event.repository.name }}" --pr "${{ github.event.pull_request.number }}" --mode analyze                                                                     
-                                                                                                 
-      - name: Upload Checkpoint                                                                
-        uses: actions/upload-artifact@v4                                                       
-        with:                                                                                  
-          name: checkpoint-${{ github.event.pull_request.number }}                             
-          path: autodoc-agent/checkpoint.db 
+          uv run python main.py \
+            --owner "${{ github.event.repository.owner.login }}" \
+            --repo "${{ github.event.repository.name }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --mode analyze
+
+      - name: Upload checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkpoint-${{ github.event.pull_request.number }}
+          path: autodoc-agent/checkpoint.db

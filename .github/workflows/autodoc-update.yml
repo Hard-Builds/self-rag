@@ -21,6 +21,7 @@ jobs:
       LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
       LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
       LANGSMITH_TRACING: ${{ secrets.LANGSMITH_TRACING }}
+
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -31,13 +32,15 @@ jobs:
           owner: Hard-Builds
           repositories: autodoc-agent
 
-      - uses: actions/checkout@v4
+      - name: Checkout autodoc-agent
+        uses: actions/checkout@v4
         with:
           repository: Hard-Builds/autodoc-agent
           path: autodoc-agent
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: astral-sh/setup-uv@v4
+      - name: Set up Python via uv
+        uses: astral-sh/setup-uv@v4
         with:
           python-version: "3.12"
 
@@ -53,7 +56,7 @@ jobs:
         working-directory: autodoc-agent
         run: uv sync
 
-      - name: Download Checkpoint
+      - name: Download checkpoint
         uses: actions/download-artifact@v4
         with:
           name: checkpoint-${{ github.event.pull_request.number }}
@@ -62,4 +65,8 @@ jobs:
       - name: Run update
         working-directory: autodoc-agent
         run: |
-          uv run python main.py --owner "${{ github.event.repository.owner.login }}" --repo "${{ github.event.repository.name }}" --pr "${{ github.event.pull_request.number }}" --mode update
+          uv run python main.py \
+            --owner "${{ github.event.repository.owner.login }}" \
+            --repo "${{ github.event.repository.name }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --mode update
