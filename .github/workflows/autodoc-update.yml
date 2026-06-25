@@ -8,7 +8,6 @@ jobs:
   update:
     runs-on: ubuntu-latest
     if: contains(github.event.review.body, '/approve-autodoc')
-    environment: autodoc-approval
     permissions:
       pull-requests: write
       contents: write

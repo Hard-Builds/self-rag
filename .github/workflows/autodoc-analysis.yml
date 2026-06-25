@@ -7,7 +7,6 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    environment: autodoc-approval
     permissions:
       pull-requests: write
       contents: read
