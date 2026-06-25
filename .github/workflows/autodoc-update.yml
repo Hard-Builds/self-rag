@@ -56,6 +56,14 @@ jobs:
         working-directory: autodoc-agent
         run: uv sync
 
+      - name: Get PR branch
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH=$(gh pr view "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --json headRefName --jq '.headRefName')
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
       - name: Find analysis run ID
         id: find-run
         env:
@@ -64,7 +72,7 @@ jobs:
           RUN_ID=$(gh run list \
             --repo "${{ github.repository }}" \
             --workflow "autodoc-analysis.yml" \
-            --branch "${{ github.event.pull_request.head.ref }}" \
+            --branch "${{ steps.pr-info.outputs.branch }}" \
             --status success \
             --limit 1 \
             --json databaseId \
@@ -74,7 +82,7 @@ jobs:
       - name: Download checkpoint
         uses: actions/download-artifact@v4
         with:
-          name: checkpoint-${{ github.event.pull_request.number }}
+          name: checkpoint-${{ github.event.issue.number }}
           path: autodoc-agent
           run-id: ${{ steps.find-run.outputs.run_id }}
           github-token: ${{ steps.app-token.outputs.token }}
@@ -85,5 +93,5 @@ jobs:
           uv run python main.py \
             --owner "${{ github.event.repository.owner.login }}" \
             --repo "${{ github.event.repository.name }}" \
-            --pr "${{ github.event.pull_request.number }}" \
+            --pr "${{ github.event.issue.number }}" \
             --mode update
