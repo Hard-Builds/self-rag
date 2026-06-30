@@ -23,16 +23,25 @@ async def rewrite_answer(state: RAGState):
 
     prompt = ChatPromptTemplate.from_messages([
         SystemMessage(
-            "You are a strict reviser.\n\n"
-            "You must output based on the following format:\n\n"
-            "FORMAT (quote-only answer):\n"
-            "- <direct quote from the CONTEXT>\n"
-            "- <direct quote from the CONTEXT>\n\n"
-            "Rules: \n"
-            "- Use ONLY the CONTEXT.\n"
-            "- Do NOT add any new words besides bullet dashes and the quotes themselves.\n"
-            "- Do NOT explain anything.\n"
-            "-Do NOT say 'context', 'not mentioned', 'does not mention', 'not provided' etc"
+            # v2 — fluent prose rewrite instead of raw quotes; handles no-match and near-correct edge cases
+            "You are a strict grounding reviser. Rewrite the ANSWER to remove all unsupported claims "
+            "while keeping it readable and natural.\n\n"
+            "Rules:\n"
+            "- Keep every claim that is explicitly stated in CONTEXT. Use the same wording where possible.\n"
+            "- Remove or replace any word, phrase, or inference not present in CONTEXT.\n"
+            "- Write in fluent prose (full sentences). Do NOT produce a bullet list of raw quotes.\n"
+            "- Do NOT add new information, explain, or speculate.\n"
+            "- Do NOT reference the context, document, or source in your output.\n"
+            "- Do NOT say 'context', 'not mentioned', 'does not mention', 'not provided', 'based on the document'.\n\n"
+            "Edge case guardrails:\n"
+            "- If CONTEXT contains no information relevant to the QUESTION → output exactly: "
+            "'I was unable to find specific information about this in the available documents.'\n"
+            "- If only one unsupported word needs removal, rewrite that sentence minimally — do not rewrite the whole answer.\n"
+            "- If CONTEXT contradicts part of the ANSWER, keep only the version supported by CONTEXT.\n\n"
+            "Example:\n"
+            "ANSWER: 'NexaAI offers a generous 30-day refund policy for all plans.'\n"
+            "CONTEXT: 'Refunds are available within 30 days of purchase for all subscription plans.'\n"
+            "REWRITE: 'NexaAI offers a 30-day refund policy for all subscription plans.'"
         ),
         HumanMessagePromptTemplate.from_template(
             "Question: \n{question}\n\n"

@@ -17,15 +17,27 @@ async def check_answer_usefulness(state: RAGState):
         AnswerUsefulModel
     ).ainvoke([
         SystemMessage(
-            "You are judging USEFULNESS of the answer for the QUESTION.\n\n"
-            "Goal: \n"
-            "- Decide if the answer actually addresses what the user asked.\n\n"
-            "Rules: \n"
-            "- is_ans_useful=True, The answer directly answers the question or provide the requested specific info.\n"
-            "- is_ans_useful=False, The answer is generic, off-topic, or only gives related background without answering.\n"
+            # v2 — fallback string guardrails, concrete examples for borderline cases
+            "You are judging whether the ANSWER actually addresses what the user asked in QUESTION.\n\n"
+            "is_ans_useful=true: ANSWER directly responds to the question with specific information.\n"
+            "is_ans_useful=false: ANSWER is generic, off-topic, only gives background, or admits it cannot answer.\n\n"
+            "Edge case guardrails:\n"
+            "- ANSWER is 'No relevant document found' or 'I don't know' → false\n"
+            "- ANSWER is empty or blank → false\n"
+            "- ANSWER gives a related fact but not the one asked (e.g. asked about refunds, answered about cancellation) → false\n"
+            "- ANSWER partially addresses the question (e.g. answers yes/no but omits the requested detail) → false\n"
+            "- ANSWER is technically correct but for a subtly different question → false\n\n"
+            "Examples:\n"
+            "Q: 'Does NexaAI offer a free trial?'\n"
+            "A: 'NexaAI provides various options for new customers.' → false (generic, no direct answer)\n\n"
+            "Q: 'Does NexaAI offer a free trial?'\n"
+            "A: 'Yes, NexaAI offers a 14-day free trial on all plans.' → true\n\n"
+            "Q: 'What is the refund timeline?'\n"
+            "A: 'NexaAI has a refund policy for cancelled subscriptions.' → false (mentions topic, no specific answer)\n\n"
+            "Rules:\n"
+            "- DO NOT re-check grounding. Only check: did we answer the question?\n"
             "- DO NOT use outside knowledge.\n"
-            "- DO NOT re-check grounding. Only check: 'did we answer the question?'\n"
-            "- Keep reason short to 1 line"
+            "- Keep reason to 1 line."
         ),
         HumanMessage(
             f"Question: {state["question"]}\n\n"

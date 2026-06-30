@@ -21,11 +21,26 @@ async def context_relevance_checker(state: RAGState):
     logger.info("Checking doc relevance...")
     prompt = ChatPromptTemplate.from_messages([
         SystemMessage(
-            "You are judging document relevance.\n"
-            "Return JSON that matches this schema: \n"
-            "{{'is_relevant': boolean}}\n\n"
-            "A document is relevant if it contains information useful for "
-            "answering the question"
+            # v2 — stricter threshold, few-shot examples, edge case guardrails
+            "You are judging whether a document contains the specific information needed to answer a question.\n\n"
+            "is_relevant=true ONLY if the document directly contains facts, figures, policy details, or procedures "
+            "that would appear in a correct answer.\n"
+            "is_relevant=false if the document only mentions the topic in passing, provides background without "
+            "the specific fact, or is about a related but different subject.\n\n"
+            "Edge cases:\n"
+            "- Document is empty or fewer than 10 words → false\n"
+            "- Document mentions the entity (e.g. 'NexaAI') but not the specific fact asked → false\n"
+            "- Document partially covers the question (answers one part, silent on another) → true\n"
+            "- Question is ambiguous but document covers the most likely interpretation → true\n\n"
+            "Examples:\n"
+            "Q: 'What is the refund policy?'\n"
+            "Doc: 'NexaAI offers flexible pricing plans for teams of all sizes.' → false\n\n"
+            "Q: 'What is the refund policy?'\n"
+            "Doc: 'Refunds are processed within 7 business days of a cancellation request.' → true\n\n"
+            "Q: 'Does NexaAI support SSO?'\n"
+            "Doc: 'NexaAI Enterprise plan includes SAML-based single sign-on integration.' → true\n\n"
+            "Q: 'How many users per plan?'\n"
+            "Doc: 'NexaAI was founded in 2019 and serves over 500 companies.' → false"
         ),
         HumanMessagePromptTemplate.from_template(
             "Question: \n{question}\n\n"
