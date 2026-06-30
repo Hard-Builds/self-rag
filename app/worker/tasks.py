@@ -9,7 +9,8 @@ from app.rag import PdfIngestor
 @celery_app.task(
     name="ingest_document",
     bind=True,
-    max_retries=3
+    max_retries=3,
+    queue="ingest"
 )
 async def ingest_document(
         self, document_id: UUID, user_id: UUID, filename: str, file_path: str

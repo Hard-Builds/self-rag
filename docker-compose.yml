@@ -24,6 +24,19 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
 
+  celery_worker:
+    image: python:3.12-slim
+    command: >
+      sh -c "pip install uv && uv sync && celery -A app.celery_app worker --loglevel=info -Q ingest"
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

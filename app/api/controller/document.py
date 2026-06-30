@@ -1,5 +1,4 @@
 import os
-import shutil
 from pathlib import Path
 from uuid import UUID
 
@@ -54,7 +53,9 @@ class DocumentController:
             user_id: UUID
     ):
         filename: str = file.filename
-        file_path: str = os.path.join(UPLOAD_DIR, filename)
+        user_upload_dir = UPLOAD_DIR / str(user_id)
+        os.makedirs(user_upload_dir, exist_ok=True)
+        file_path: str = str(user_upload_dir / filename)
 
         if await self.document_service.is_ingested(
                 user_id=user_id,
@@ -65,9 +66,17 @@ class DocumentController:
         # Currently only supported for pdf
         await self._validate_pdf_doc(file)
 
+        MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File size exceeds the 2 MB limit"
+            )
+
         # Storing file locally
         with open(file_path, "wb") as tmp:
-            shutil.copyfileobj(file.file, tmp)
+            tmp.write(content)
 
         # Updating DB with the records
         document = await self.document_service.create({

@@ -7,18 +7,17 @@ from langchain_core.documents import Document
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from starlette import status
 from tenacity import retry, wait_exponential, stop_after_attempt, \
-    retry_if_result
+    retry_if_exception
 
 from app.constants import DocumentStatusEnum
 from app.core import settings, logger
 from app.db.services import DocumentService, ChunkService
 
 
-def is_rate_limited(response):
-    return getattr(response, "status_code",
-                   None) == status.HTTP_429_TOO_MANY_REQUESTS
+def _is_rate_limit_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return "429" in msg or "quota" in msg or "resource exhausted" in msg
 
 class BaseIngestor(ABC):
     _embedding_model = None
@@ -97,7 +96,7 @@ class BaseIngestor(ABC):
     @retry(
         wait=wait_exponential(multiplier=1, min=4, max=60),
         stop=stop_after_attempt(5),
-        retry=retry_if_result(is_rate_limited)
+        retry=retry_if_exception(_is_rate_limit_error)
     )
     async def _embed_batch(self, texts):
         return await self._embedder.aembed_documents(texts)
