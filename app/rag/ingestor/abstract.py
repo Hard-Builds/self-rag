@@ -19,6 +19,14 @@ def _is_rate_limit_error(exc: BaseException) -> bool:
     msg = str(exc).lower()
     return "429" in msg or "quota" in msg or "resource exhausted" in msg
 
+
+def _is_transient_db_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return any(kw in msg for kw in (
+        "connection", "timeout", "deadlock", "could not connect",
+        "server closed the connection", "operationalerror",
+    ))
+
 class BaseIngestor(ABC):
     _embedding_model = None
 
@@ -101,35 +109,48 @@ class BaseIngestor(ABC):
     async def _embed_batch(self, texts):
         return await self._embedder.aembed_documents(texts)
 
+    @retry(
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        stop=stop_after_attempt(settings.DB_INSERT_MAX_RETRIES),
+        retry=retry_if_exception(_is_transient_db_error),
+        reraise=True,
+    )
+    async def _store_batch(self, rows: list[dict]) -> None:
+        await self.chunk_service.upsert_many(
+            rows,
+            batch_size=settings.DB_INSERT_BATCH_SIZE,
+            commit=False,
+        )
+
     async def _embed_and_store(self, chunks: list[Document]):
-        embeddings = []
+        emb_batch_size = self.embedding_batch_size
+        total = len(chunks)
 
-        batch_size = self.embedding_batch_size
+        for idx in range(0, total, emb_batch_size):
+            batch_chunks = chunks[idx: idx + emb_batch_size]
+            texts = [c.page_content for c in batch_chunks]
 
-        for idx in range(0, len(chunks), batch_size):
-            batch = chunks[idx: idx + batch_size]
-            texts = list(map(lambda x: x.page_content, batch))
             batch_embeddings = await self._embed_batch(texts)
-            embeddings.extend(batch_embeddings)
-            logger.info(
-                f"chunk processed: "
-                f"{min(idx + batch_size, len(chunks))}/{len(chunks)}"
-            )
 
-            await asyncio.sleep(5)
+            rows = [
+                {
+                    "document_id": self.document_id,
+                    "content": chunk.page_content,
+                    "embedding": embedding,
+                    "chunk_index": idx + offset,
+                    "metadata_": chunk.metadata,
+                }
+                for offset, (chunk, embedding) in enumerate(
+                    zip(batch_chunks, batch_embeddings)
+                )
+            ]
+            await self._store_batch(rows)
 
-        # Updating DB with the records
-        chunk_data = []
-        for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            chunk_data.append({
-                "document_id": self.document_id,
-                "content": chunk.page_content,
-                "embedding": embedding,
-                "chunk_index": idx,
-                "metadata_": chunk.metadata,
-            })
+            processed = min(idx + emb_batch_size, total)
+            logger.info(f"[{self.document_id}] chunks persisted: {processed}/{total}")
 
-        await self.chunk_service.create_many(chunk_data, commit=False)
+            if processed < total:
+                await asyncio.sleep(5)
 
     async def _document_status_update(
             self,

@@ -2,7 +2,7 @@ import uuid
 
 import uuid6
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, Index, Integer, Text
+from sqlalchemy import ForeignKey, Index, Integer, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -31,5 +31,7 @@ class Chunk(Base):
 
     __table_args__ = (
         Index("ix_chunks_document_id", "document_id"),
+        # Enables idempotent upsert: re-ingesting a document updates existing chunks
+        UniqueConstraint("document_id", "chunk_index", name="uq_chunks_document_chunk_index"),
         # HNSW vector index is created via raw DDL in the Alembic migration
     )

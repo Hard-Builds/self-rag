@@ -1,7 +1,9 @@
 import uuid
+from typing import Any, Dict, List
 from uuid import UUID
 
 from sqlalchemy import func, select, text
+from sqlalchemy.dialects.postgresql import insert
 
 from app.db.models import Document
 from app.db.models.chunk import Chunk
@@ -14,6 +16,34 @@ _RRF_K = 60
 class ChunkService(BaseDB[Chunk]):
     def __init__(self, db):
         super().__init__(db, Chunk)
+
+    async def upsert_many(
+        self,
+        rows: List[Dict[str, Any]],
+        batch_size: int = 100,
+        commit: bool = True,
+    ) -> None:
+        """Bulk-upsert chunks in batches.
+
+        Conflict target is (document_id, chunk_index). On conflict the content,
+        embedding, and metadata columns are updated so re-ingesting a document
+        is idempotent.
+        """
+        for start in range(0, len(rows), batch_size):
+            batch = rows[start : start + batch_size]
+            stmt = insert(Chunk).values(batch)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["document_id", "chunk_index"],
+                set_={
+                    "content": stmt.excluded.content,
+                    "embedding": stmt.excluded.embedding,
+                    "metadata_": stmt.excluded.metadata_,
+                },
+            )
+            await self.db.execute(stmt)
+            await self.db.flush()
+        if commit:
+            await self.db.commit()
 
     async def get_chunks_for_document(self, document_id: uuid.UUID):
         return await self.get_all_by_filter(document_id=document_id)

@@ -19,6 +19,8 @@ class Settings(BaseSettings):
 
     EMBEDDING_DIM: int = 768  # Change to match your model (768 gemini, 1536 openai-small, 3072 openai-large)
     EMBEDDING_BATCH_SIZE: int = 10
+    DB_INSERT_BATCH_SIZE: int = 100
+    DB_INSERT_MAX_RETRIES: int = 3
     MAX_CHAT_HISTORY: int = 6
 
     CHUNK_SIZE: int = 1200
