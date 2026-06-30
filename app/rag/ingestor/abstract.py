@@ -4,6 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from langchain_core.documents import Document
+from langchain_experimental.text_splitter import SemanticChunker
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from starlette import status
@@ -80,10 +81,16 @@ class BaseIngestor(ABC):
         pass
 
     async def _split_documents(self, docs: list[Document]) -> list[Document]:
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap
-        )
+        if settings.SEMANTIC_CHUNKING:
+            splitter = SemanticChunker(
+                embeddings=self._embedder,
+                breakpoint_threshold_type=settings.SEMANTIC_CHUNKING_BREAKPOINT_TYPE,
+            )
+        else:
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=self.chunk_size,
+                chunk_overlap=self.chunk_overlap
+            )
         chunks = splitter.split_documents(documents=docs)
         return chunks
 

@@ -23,11 +23,19 @@ class Settings(BaseSettings):
 
     CHUNK_SIZE: int = 1200
     CHUNK_OVERLAP: int = 100
+    SEMANTIC_CHUNKING: bool = False  # use SemanticChunker instead of RecursiveCharacterTextSplitter
+    SEMANTIC_CHUNKING_BREAKPOINT_TYPE: str = "percentile"  # percentile | standard_deviation | interquartile
 
     CORS_ALLOWED_URL: str | None = None
 
     # Internal service-to-service auth
     INTERNAL_TOKEN: str | None = None
+
+    # retrieval strategy
+    RETRIEVER_TOP_K: int = 5
+    RETRIEVER_HYBRID: bool = True   # enable dense+BM25 RRF fusion
+    RETRIEVER_RERANK: bool = False  # enable cross-encoder reranking (requires sentence-transformers)
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     # context eval
     CONTEXT_EVAL_HIGHER_THR: float = 0.7
