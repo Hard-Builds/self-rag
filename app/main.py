@@ -31,6 +31,8 @@ async def lifespan(app: FastAPI):
     await DBClient.initialise(app)
 
     Retriever.init()
+    if settings.RETRIEVER_RERANK:
+        Retriever.init_reranker()
 
     async with AsyncPostgresSaver.from_conn_string(
             settings.db_url_psycopg

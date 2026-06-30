@@ -2,6 +2,7 @@ from langchain_core.runnables import RunnableConfig
 
 from app.bot import RAGState
 from app.core import logger
+from app.core.config import settings
 from app.rag.retriever import Retriever
 
 
@@ -12,6 +13,8 @@ async def context_retriever(state: RAGState, config: RunnableConfig):
         db=config["db"],
         user_id=config["user_id"],
         query=state.get("retrieval_query") or state["question"],
-        top_k=3
+        top_k=settings.RETRIEVER_TOP_K,
+        use_hybrid=settings.RETRIEVER_HYBRID,
+        use_reranker=settings.RETRIEVER_RERANK,
     )
     return {"docs": context_docs}

@@ -1,11 +1,14 @@
 import uuid
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select, text
 
 from app.db.models import Document
 from app.db.models.chunk import Chunk
 from app.db.services.base import BaseDB
+
+# Reciprocal Rank Fusion constant — 60 is the standard default
+_RRF_K = 60
 
 
 class ChunkService(BaseDB[Chunk]):
@@ -24,6 +27,88 @@ class ChunkService(BaseDB[Chunk]):
             .join(Document, Chunk.document_id == Document.id)
             .filter(Document.user_id == user_id)
             .order_by(Chunk.embedding.cosine_distance(embedding))
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def hybrid_search(
+        self,
+        user_id: UUID,
+        embedding: list[float],
+        query_text: str,
+        limit: int = 5,
+        fetch_k: int = 20,
+    ) -> list[Chunk]:
+        """Reciprocal Rank Fusion over dense (cosine) + sparse (BM25/ts_rank) results.
+
+        fetch_k candidates are retrieved per leg before fusion so the final
+        ranking has enough signal. Only `limit` rows are returned.
+        """
+        # Dense leg — ranked by cosine distance ascending (lower = closer)
+        dense_cte = (
+            select(
+                Chunk.id,
+                func.row_number()
+                .over(order_by=Chunk.embedding.cosine_distance(embedding))
+                .label("dense_rank"),
+            )
+            .join(Document, Chunk.document_id == Document.id)
+            .filter(Document.user_id == user_id)
+            .filter(Chunk.embedding.isnot(None))
+            .order_by(Chunk.embedding.cosine_distance(embedding))
+            .limit(fetch_k)
+            .cte("dense_cte")
+        )
+
+        # Sparse leg — PostgreSQL full-text search ranked by ts_rank
+        ts_query = func.plainto_tsquery("english", query_text)
+        ts_vector = func.to_tsvector("english", Chunk.content)
+        sparse_cte = (
+            select(
+                Chunk.id,
+                func.row_number()
+                .over(order_by=func.ts_rank(ts_vector, ts_query).desc())
+                .label("sparse_rank"),
+            )
+            .join(Document, Chunk.document_id == Document.id)
+            .filter(Document.user_id == user_id)
+            .filter(ts_vector.op("@@")(ts_query))
+            .order_by(func.ts_rank(ts_vector, ts_query).desc())
+            .limit(fetch_k)
+            .cte("sparse_cte")
+        )
+
+        # RRF fusion: score = 1/(k+rank_dense) + 1/(k+rank_sparse)
+        # COALESCE handles chunks that appear in only one leg (rank defaults to fetch_k+1)
+        rrf_score = (
+            1.0 / (_RRF_K + func.coalesce(dense_cte.c.dense_rank, fetch_k + 1))
+            + 1.0 / (_RRF_K + func.coalesce(sparse_cte.c.sparse_rank, fetch_k + 1))
+        )
+        fused_cte = (
+            select(
+                func.coalesce(dense_cte.c.id, sparse_cte.c.id).label("chunk_id"),
+                rrf_score.label("rrf_score"),
+            )
+            .select_from(
+                dense_cte.outerjoin(sparse_cte, dense_cte.c.id == sparse_cte.c.id)
+            )
+            .union(
+                select(
+                    func.coalesce(sparse_cte.c.id, dense_cte.c.id).label("chunk_id"),
+                    rrf_score.label("rrf_score"),
+                )
+                .select_from(
+                    sparse_cte.outerjoin(dense_cte, sparse_cte.c.id == dense_cte.c.id)
+                )
+            )
+            .cte("fused_cte")
+        )
+
+        stmt = (
+            select(Chunk)
+            .join(fused_cte, Chunk.id == fused_cte.c.chunk_id)
+            .order_by(fused_cte.c.rrf_score.desc())
             .limit(limit)
         )
         result = await self.db.execute(stmt)
