@@ -23,6 +23,8 @@ class Settings(BaseSettings):
 
     CHUNK_SIZE: int = 1200
     CHUNK_OVERLAP: int = 100
+    SEMANTIC_CHUNKING: bool = False  # use SemanticChunker instead of RecursiveCharacterTextSplitter
+    SEMANTIC_CHUNKING_BREAKPOINT_TYPE: str = "percentile"  # percentile | standard_deviation | interquartile
 
     CORS_ALLOWED_URL: str | None = None
 

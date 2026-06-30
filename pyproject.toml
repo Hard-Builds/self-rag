@@ -64,6 +64,7 @@ dependencies = [
     "langchain-classic==1.0.7",
     "langchain-community==0.4.2",
     "langchain-core==1.4.3",
+    "langchain-experimental>=0.4.2",
     "langchain-google-genai==4.2.5",
     "langchain-protocol==0.0.16",
     "langchain-tavily==0.2.18",
