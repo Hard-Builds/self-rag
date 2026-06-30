@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "question": "How many annual leave days are employees entitled to at NexaAI?",
+    "answer": "Employees at NexaAI are entitled to 18 working days of annual leave per year.",
+    "source": "Company_Policies.pdf",
+    "category": "HR Policy"
+  },
+  {
+    "id": 2,
+    "question": "What is the maximum number of unused annual leave days that can be carried forward?",
+    "answer": "Unused annual leave may be carried forward up to 30 days.",
+    "source": "Company_Policies.pdf",
+    "category": "HR Policy"
+  },
+  {
+    "id": 3,
+    "question": "How many sick leave days per year does NexaAI provide to its employees?",
+    "answer": "NexaAI provides 10 working days of sick leave per year.",
+    "source": "Company_Policies.pdf",
+    "category": "HR Policy"
+  },
+  {
+    "id": 4,
+    "question": "What disciplinary actions can NexaAI take for policy violations?",
+    "answer": "NexaAI may issue a written warning, impose a suspension, or terminate employment in severe cases.",
+    "source": "Company_Policies.pdf",
+    "category": "Workplace Conduct"
+  },
+  {
+    "id": 5,
+    "question": "How often does NexaAI conduct performance reviews?",
+    "answer": "NexaAI conducts bi-annual (twice a year) performance reviews.",
+    "source": "Company_Policies.pdf",
+    "category": "HR Policy"
+  },
+  {
+    "id": 6,
+    "question": "When was NexaAI Solutions founded and where is it headquartered?",
+    "answer": "NexaAI Solutions was founded in 2021 and is headquartered in Bengaluru, India.",
+    "source": "Company_Profile.pdf",
+    "category": "Company Overview"
+  },
+  {
+    "id": 7,
+    "question": "Which industries does NexaAI primarily serve?",
+    "answer": "NexaAI primarily serves mid-sized and large organizations in the technology, finance, healthcare, and education sectors.",
+    "source": "Company_Profile.pdf",
+    "category": "Company Overview"
+  },
+  {
+    "id": 8,
+    "question": "Who founded NexaAI and what is their background?",
+    "answer": "NexaAI was founded by Aarav Mehta, who has over 10 years of experience in enterprise data platforms and cloud infrastructure. He previously worked with global consulting firms leading large-scale digital transformation projects.",
+    "source": "Company_Profile.pdf",
+    "category": "Leadership"
+  },
+  {
+    "id": 9,
+    "question": "Who is the CTO of NexaAI and what is their area of expertise?",
+    "answer": "Riya Kapoor is the CTO of NexaAI, with expertise in distributed systems and AI platforms.",
+    "source": "Company_Profile.pdf",
+    "category": "Leadership"
+  },
+  {
+    "id": 10,
+    "question": "In which regions does NexaAI currently operate?",
+    "answer": "NexaAI operates in India, Southeast Asia, and Europe.",
+    "source": "Company_Profile.pdf",
+    "category": "Company Overview"
+  },
+  {
+    "id": 11,
+    "question": "What is NexaChat and what problem does it solve?",
+    "answer": "NexaChat is an AI-powered internal knowledge assistant that allows employees to query company documents, policies, reports, and knowledge bases using natural language. It reduces time spent searching for information and ensures consistent, citation-backed answers across the organization.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Product"
+  },
+  {
+    "id": 12,
+    "question": "What file types does NexaChat support for document querying?",
+    "answer": "NexaChat supports PDFs, Word documents, presentations, and web pages.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Product"
+  },
+  {
+    "id": 13,
+    "question": "What is the monthly price per user for the Starter Plan?",
+    "answer": "The Starter Plan is priced at 2,499 per user per month.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Pricing"
+  },
+  {
+    "id": 14,
+    "question": "What products are included in the Growth Plan?",
+    "answer": "The Growth Plan includes access to NexaChat, NexaInsight, and NexaSupport, along with advanced analytics, third-party integrations, and priority support.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Pricing"
+  },
+  {
+    "id": 15,
+    "question": "What discount does NexaAI offer for annual billing?",
+    "answer": "NexaAI offers a 15% discount for annual billing.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Pricing"
+  },
+  {
+    "id": 16,
+    "question": "What query limit does the Starter Plan enforce per month?",
+    "answer": "The Starter Plan allows up to 5,000 queries per month.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Pricing"
+  },
+  {
+    "id": 17,
+    "question": "What is NexaSupport and what channels does it support?",
+    "answer": "NexaSupport is an AI-driven customer support solution that automates responses to common queries and escalates complex issues to human agents. It supports multi-channel interactions including chat, email, and web.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Product"
+  },
+  {
+    "id": 18,
+    "question": "What makes NexaSecure useful for regulated industries?",
+    "answer": "NexaSecure provides role-based access and document permissions, query logging and audit trails, data residency and compliance controls, policy-based response filtering, and integration with enterprise IAM systems — making it well-suited for compliance-heavy regulated industries.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Product"
+  },
+  {
+    "id": 19,
+    "question": "What support level is included in the Enterprise Plan?",
+    "answer": "The Enterprise Plan includes 24x7 support with SLA, a dedicated customer success manager, and quarterly security and compliance reviews.",
+    "source": "Product_and_Pricing.pdf",
+    "category": "Pricing"
+  },
+  {
+    "id": 20,
+    "question": "What are the core values of NexaAI Solutions?",
+    "answer": "NexaAI's core values are: Customer Obsession (solutions start with real business pain points), Transparency (clear communication internally and externally), Accountability (ownership of outcomes), Security First (data protection is non-negotiable), and Continuous Improvement (iterate, learn, and improve relentlessly).",
+    "source": "Company_Profile.pdf",
+    "category": "Company Overview"
+  }
+]

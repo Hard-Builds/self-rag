@@ -1,24 +1,25 @@
 # NexaAI Solutions — retrieval evaluation test set
-# Documents: Company_Profile.pdf, Company_Policies.pdf, Product_and_Pricing.pdf
-# 16 chunks across 3 documents; queries cover all three files.
+# Aligned with test_dataset.json (20 Q&A pairs across 3 documents).
+# "relevant" keywords are distinctive substrings that must appear in the
+# correct chunk; they are intentionally specific to avoid false positives.
 
+{"query": "How many annual leave days are employees entitled to at NexaAI?", "relevant": ["18 working days", "Annual Leave"]}
+{"query": "What is the maximum number of unused annual leave days that can be carried forward?", "relevant": ["carried forward", "30 days"]}
+{"query": "How many sick leave days per year does NexaAI provide?", "relevant": ["Sick Leave", "10 working days"]}
+{"query": "What disciplinary actions can NexaAI take for policy violations?", "relevant": ["Written warning", "Suspension", "Termination"]}
+{"query": "How often does NexaAI conduct performance reviews?", "relevant": ["Bi-annual performance"]}
 {"query": "When was NexaAI Solutions founded and where is it headquartered?", "relevant": ["Founded: 2021", "Bengaluru"]}
-{"query": "How many employees does NexaAI have?", "relevant": ["85+"]}
-{"query": "What is the vision of NexaAI Solutions?", "relevant": ["trusted AI partner", "intelligent decision-making"]}
-{"query": "Who is the founder of NexaAI and what is his background?", "relevant": ["Aarav Mehta", "enterprise data platforms"]}
-{"query": "What are the core values of NexaAI?", "relevant": ["Customer Obsession", "Transparency"]}
-{"query": "How many sick leave days are employees entitled to per year?", "relevant": ["Sick Leave", "10 working days"]}
-{"query": "What is NexaAI's policy on casual leave?", "relevant": ["Casual Leave", "6 working days"]}
-{"query": "What disciplinary actions can be taken for policy violations?", "relevant": ["Written warning", "Suspension", "Termination"]}
-{"query": "What is the maternity leave policy at NexaAI?", "relevant": ["Maternity Leave", "statutory"]}
-{"query": "How are unused annual leaves handled?", "relevant": ["carried forward", "30 days"]}
-{"query": "What products does NexaAI offer?", "relevant": ["NexaChat", "NexaInsight", "NexaSupport", "NexaSecure"]}
-{"query": "What is the price of the Starter Plan?", "relevant": ["2,499", "Starter Plan"]}
-{"query": "What is included in the Professional Plan?", "relevant": ["5,999", "NexaChat", "NexaInsight", "NexaSupport"]}
-{"query": "What discount is available for annual billing?", "relevant": ["15%", "Annual billing"]}
-{"query": "What does NexaSupport do?", "relevant": ["customer support", "escalating", "human agents"]}
-{"query": "What governance features does NexaSecure provide?", "relevant": ["audit trails", "compliance", "IAM"]}
-{"query": "What document formats does NexaChat support?", "relevant": ["PDFs", "Word documents", "presentations"]}
-{"query": "What analytics capabilities does NexaInsight provide?", "relevant": ["natural language", "explainable insights", "BI tools"]}
-{"query": "What regions does NexaAI operate in?", "relevant": ["Southeast Asia", "Europe", "India"]}
-{"query": "What is NexaAI's policy on workplace conduct?", "relevant": ["professionally", "ethically", "confidentiality"]}
+{"query": "Which industries does NexaAI primarily serve?", "relevant": ["technology, finance, healthcare"]}
+{"query": "Who founded NexaAI and what is their background?", "relevant": ["Aarav Mehta", "enterprise data platforms"]}
+{"query": "Who is the CTO of NexaAI and what is their area of expertise?", "relevant": ["Riya Kapoor", "Distributed systems"]}
+{"query": "In which regions does NexaAI currently operate?", "relevant": ["Southeast Asia", "Europe"]}
+{"query": "What is NexaChat and what problem does it solve?", "relevant": ["NexaChat", "internal assistant", "natural language"]}
+{"query": "What file types does NexaChat support for document querying?", "relevant": ["PDFs", "Word documents", "presentations"]}
+{"query": "What is the monthly price per user for the Starter Plan?", "relevant": ["2,499", "Starter Plan"]}
+{"query": "What products are included in the Growth Plan?", "relevant": ["NexaChat", "NexaInsight", "NexaSupport", "Growth Plan"]}
+{"query": "What discount does NexaAI offer for annual billing?", "relevant": ["15%", "Annual billing"]}
+{"query": "What query limit does the Starter Plan enforce per month?", "relevant": ["5,000 queries"]}
+{"query": "What is NexaSupport and what channels does it support?", "relevant": ["NexaSupport", "chat, email, web"]}
+{"query": "What makes NexaSecure useful for regulated industries?", "relevant": ["audit trails", "compliance", "IAM"]}
+{"query": "What support level is included in the Enterprise Plan?", "relevant": ["24x7 support", "SLA", "Enterprise Plan"]}
+{"query": "What are the core values of NexaAI Solutions?", "relevant": ["Customer Obsession", "Transparency", "Accountability"]}

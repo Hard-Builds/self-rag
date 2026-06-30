@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     INTERNAL_TOKEN: str | None = None
 
     # retrieval strategy
-    RETRIEVER_TOP_K: int = 5
+    RETRIEVER_TOP_K: int = 3
     RETRIEVER_HYBRID: bool = True   # enable dense+BM25 RRF fusion
     RETRIEVER_RERANK: bool = False  # enable cross-encoder reranking (requires sentence-transformers)
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
