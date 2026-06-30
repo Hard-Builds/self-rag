@@ -2,7 +2,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from pydantic import BaseModel
 
 from app.bot import RAGState
-from app.bot.llm import llm_model, llm_retry
+from app.bot.llm import llm_call, llm_model
 from app.core import logger
 
 
@@ -13,7 +13,7 @@ class AnswerUsefulModel(BaseModel):
 
 async def check_answer_usefulness(state: RAGState):
     logger.info("Checking for the answer's usefulness...")
-    response: AnswerUsefulModel = await llm_retry(
+    response: AnswerUsefulModel = await llm_call(
         llm_model.with_structured_output(AnswerUsefulModel).ainvoke
     )([
         SystemMessage(
