@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -5,9 +7,17 @@ from pydantic import BaseModel, ConfigDict
 from app.constants.enums import MessageRoleEnum
 
 
+class MetadataFilter(BaseModel):
+    doc_type: Optional[str] = None
+    source: Optional[str] = None
+    uploaded_after: Optional[datetime] = None
+    uploaded_before: Optional[datetime] = None
+
+
 # ------- Request models -------
 class QueryRequest(BaseModel):
     query: str
+    filters: Optional[MetadataFilter] = None
 
 class ThreadListRespModel(BaseModel):
     id: UUID

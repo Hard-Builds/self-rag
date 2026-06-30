@@ -1,6 +1,7 @@
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Form
 from fastapi import UploadFile, File
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from starlette import status
@@ -16,12 +17,16 @@ document_router = APIRouter()
 async def ingest_document(
         requests: Request,
         file: UploadFile = File(...),
+        doc_type: Optional[str] = Form(None),
+        source: Optional[str] = Form(None),
         db: AsyncSession = Depends(DBClient.get_db_session),
 ):
     document_service = DocumentController(db)
     await document_service.handle_document_ingestion(
         file=file,
-        user_id=requests.state.user.id
+        user_id=requests.state.user.id,
+        doc_type=doc_type,
+        source=source,
     )
     return BaseResponse(
         status=status.HTTP_202_ACCEPTED,

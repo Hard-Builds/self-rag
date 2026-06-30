@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from langchain_core.documents import Document
@@ -40,6 +41,7 @@ class Retriever:
         top_k: int = 5,
         use_hybrid: bool = True,
         use_reranker: bool = False,
+        metadata_filter: Optional[dict] = None,
     ) -> list[Document]:
         query_embedding = await cls._embedding_model.aembed_query(query)
         fetch_k = top_k * _FETCH_K_MULTIPLIER if use_reranker else top_k
@@ -51,12 +53,14 @@ class Retriever:
                 query_text=query,
                 limit=fetch_k,
                 fetch_k=max(fetch_k * 2, 20),
+                metadata_filter=metadata_filter,
             )
         else:
             chunks = await ChunkService(db).similarity_search(
                 user_id=user_id,
                 embedding=query_embedding,
                 limit=fetch_k,
+                metadata_filter=metadata_filter,
             )
 
         if use_reranker and chunks:

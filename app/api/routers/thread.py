@@ -60,7 +60,8 @@ async def query(
             user_id=request.state.user.id,
             thread_id=thread_id,
             rag_bot=request.app.state.rag_bot,
-            query=body.query
+            query=body.query,
+            metadata_filter=body.filters,
         ),
         media_type="text/plain"
     )

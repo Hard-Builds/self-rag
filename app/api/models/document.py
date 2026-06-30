@@ -12,6 +12,8 @@ class DocumentResp(BaseModel):
     id: UUID
     filename: str
     file_path: str
+    doc_type: Optional[str] = None
+    source: Optional[str] = None
     uploaded_at: datetime
     updated_at: datetime
     status: DocumentStatusEnum

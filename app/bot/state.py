@@ -1,7 +1,15 @@
-from typing import List, Literal
+from datetime import datetime
+from typing import List, Literal, Optional, TypedDict
 
 from langchain_core.documents import Document
 from langgraph.graph import MessagesState
+
+
+class MetadataFilter(TypedDict, total=False):
+    doc_type: Optional[str]
+    source: Optional[str]
+    uploaded_after: Optional[datetime]
+    uploaded_before: Optional[datetime]
 
 
 class RAGState(MessagesState):
@@ -27,3 +35,5 @@ class RAGState(MessagesState):
     # Answer usefulness
     is_ans_useful: bool
     reason: str
+
+    metadata_filter: Optional[MetadataFilter]

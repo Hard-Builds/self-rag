@@ -16,5 +16,6 @@ async def context_retriever(state: RAGState, config: RunnableConfig):
         top_k=settings.RETRIEVER_TOP_K,
         use_hybrid=settings.RETRIEVER_HYBRID,
         use_reranker=settings.RETRIEVER_RERANK,
+        metadata_filter=state.get("metadata_filter"),
     )
     return {"docs": context_docs}

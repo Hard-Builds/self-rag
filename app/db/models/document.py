@@ -33,6 +33,8 @@ class Document(Base):
         String,
         nullable=True
     )
+    doc_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    source: Mapped[str | None] = mapped_column(String, nullable=True)
     uploaded_at: Mapped[str] = mapped_column(
         DateTime(timezone=True),
         server_default=PostgresDefaults.UTC_NOW(),
@@ -43,4 +45,8 @@ class Document(Base):
         onupdate=PostgresDefaults.UTC_NOW(),
     )
 
-    __table_args__ = (Index("ix_documents_user_id", "user_id"),)
+    __table_args__ = (
+        Index("ix_documents_user_id", "user_id"),
+        Index("ix_documents_doc_type", "doc_type"),
+        Index("ix_documents_source", "source"),
+    )

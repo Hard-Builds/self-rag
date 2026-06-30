@@ -1,9 +1,11 @@
 import asyncio
+from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
 from starlette import status
 
+from app.api.models import MetadataFilter
 from app.core import logger
 from app.db import DBClient
 from app.db.services import ThreadService, MessageService
@@ -35,17 +37,19 @@ class ThreadController:
             user_id: UUID,
             thread_id: UUID,
             rag_bot: RAGGraph,
-            query: str
+            query: str,
+            metadata_filter: Optional[MetadataFilter] = None,
     ):
         queue = asyncio.Queue()
 
         async def run_graph():
             async with DBClient._session_factory() as session:
                 try:
+                    graph_input = {"question": query}
+                    if metadata_filter:
+                        graph_input["metadata_filter"] = metadata_filter.model_dump(exclude_none=True)
                     final_state = await rag_bot.ainvoke(
-                        input={
-                            "question": query
-                        },
+                        input=graph_input,
                         config={"configurable": {
                             "thread_id": thread_id,
                             "db": session,

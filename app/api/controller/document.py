@@ -50,7 +50,9 @@ class DocumentController:
     async def handle_document_ingestion(
             self,
             file: UploadFile,
-            user_id: UUID
+            user_id: UUID,
+            doc_type: str | None = None,
+            source: str | None = None,
     ):
         filename: str = file.filename
         user_upload_dir = UPLOAD_DIR / str(user_id)
@@ -79,11 +81,16 @@ class DocumentController:
             tmp.write(content)
 
         # Updating DB with the records
-        document = await self.document_service.create({
+        doc_data = {
             "user_id": user_id,
             "filename": filename,
-            "file_path": file_path
-        })
+            "file_path": file_path,
+        }
+        if doc_type:
+            doc_data["doc_type"] = doc_type
+        if source:
+            doc_data["source"] = source
+        document = await self.document_service.create(doc_data)
 
         tasks.ingest_document.delay(
             document_id=document.id,
