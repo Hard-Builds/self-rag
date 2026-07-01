@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from starlette import status
 
 from app.api.models import MetadataFilter
@@ -38,6 +38,7 @@ class ThreadController:
             thread_id: UUID,
             rag_bot: RAGGraph,
             query: str,
+            app: FastAPI,
             metadata_filter: Optional[MetadataFilter] = None,
     ):
         queue = asyncio.Queue()
@@ -66,7 +67,10 @@ class ThreadController:
                     await queue.put(None)
 
         async def token_generator():
-            asyncio.create_task(run_graph())
+            task = asyncio.create_task(run_graph())
+            in_flight = app.state.in_flight_tasks
+            in_flight.add(task)
+            task.add_done_callback(in_flight.discard)
             while True:
                 token = await queue.get()
                 if token is None:

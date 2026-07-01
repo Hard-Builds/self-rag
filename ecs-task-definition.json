@@ -1,0 +1,79 @@
+{
+  "family": "self-rag-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::000000000000:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::000000000000:role/self-rag-task-role",
+  "containerDefinitions": [
+    {
+      "name": "self-rag-app",
+      "image": "self-rag:latest",
+      "essential": true,
+      "cpu": 512,
+      "memory": 1024,
+      "memoryReservation": 768,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "ENV", "value": "production" },
+        { "name": "LOG_LEVEL", "value": "INFO" },
+        { "name": "DB_HOST", "value": "self-rag-postgres.internal" },
+        { "name": "DB_PORT", "value": "5432" },
+        { "name": "DB_NAME", "value": "self_rag" },
+        { "name": "DB_USER", "value": "postgres" },
+        { "name": "DB_ECHO", "value": "false" },
+        { "name": "CORS_ALLOWED_URL", "value": "https://app.example.com" },
+        { "name": "GEMINI_MODEL", "value": "gemini-2.5-flash" },
+        { "name": "GEMINI_EMBEDDING_MODEL", "value": "text-embedding-004" },
+        { "name": "CONTEXT_EVAL_HIGHER_THR", "value": "0.7" },
+        { "name": "CONTEXT_EVAL_LOWER_THR", "value": "0.3" },
+        { "name": "REDIS_URL", "value": "redis://self-rag-redis.internal:6379/0" },
+        { "name": "GRACEFUL_SHUTDOWN_TIMEOUT", "value": "30" }
+      ],
+      "secrets": [
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:000000000000:secret:self-rag/db-password"
+        },
+        {
+          "name": "GEMINI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:000000000000:secret:self-rag/gemini-api-key"
+        },
+        {
+          "name": "INTERNAL_TOKEN",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:000000000000:secret:self-rag/internal-token"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      },
+      "stopTimeout": 30,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/self-rag-app",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "app",
+          "awslogs-create-group": "true"
+        }
+      },
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+.venv
+.git
+.idea
+.claude
+.github
+__pycache__
+*.pyc
+*.pyo
+.env
+.pytest_cache
+app/uploads
+eval
+scripts
+ARCHITECTURE.md

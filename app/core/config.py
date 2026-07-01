@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Internal service-to-service auth
     INTERNAL_TOKEN: str | None = None
 
+    # Graceful shutdown: max seconds to wait for in-flight RAG queries to finish
+    GRACEFUL_SHUTDOWN_TIMEOUT: float = 30.0
+
     # retrieval strategy
     RETRIEVER_TOP_K: int = 3
     RETRIEVER_HYBRID: bool = True   # enable dense+BM25 RRF fusion

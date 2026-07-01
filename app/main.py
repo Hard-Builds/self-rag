@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -34,6 +35,8 @@ async def lifespan(app: FastAPI):
     if settings.RETRIEVER_RERANK:
         Retriever.init_reranker()
 
+    app.state.in_flight_tasks = set()
+
     async with AsyncPostgresSaver.from_conn_string(
             settings.db_url_psycopg
     ) as checkpointer:
@@ -43,6 +46,22 @@ async def lifespan(app: FastAPI):
 
         yield
 
+        # Shutdown: let in-flight RAG queries (running as detached tasks) finish
+        # writing their answer/checkpoint before the DB/checkpointer connections
+        # close underneath them.
+        in_flight = app.state.in_flight_tasks
+        if in_flight:
+            logger.info(
+                f"Shutdown requested: waiting up to "
+                f"{settings.GRACEFUL_SHUTDOWN_TIMEOUT}s for "
+                f"{len(in_flight)} in-flight query task(s) to finish"
+            )
+            _done, pending = await asyncio.wait(
+                in_flight, timeout=settings.GRACEFUL_SHUTDOWN_TIMEOUT
+            )
+            for task in pending:
+                logger.warning("Cancelling in-flight query task after shutdown timeout")
+                task.cancel()
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -85,4 +104,9 @@ async def spa_fallback(rest_of_path: str):
 app.mount("/", StaticFiles(directory=_static_dir, html=True), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        timeout_graceful_shutdown=int(settings.GRACEFUL_SHUTDOWN_TIMEOUT),
+    )
