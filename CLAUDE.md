@@ -81,16 +81,19 @@ START → upsert_thread → should_retrieve
 | `app/db/client.py` | SQLAlchemy async engine + session factory |
 | `app/core/aws.py` | Shared `aioboto3` session + S3/SQS client factories (localstack endpoint) |
 | `app/core/s3.py` | `upload_bytes` / `download_bytes` / `delete_object` helpers |
-| `app/worker/sqs_queue.py` | `send_ingest_message` (producer) + `receive_messages` / `delete_message` (consumer) |
+| `app/worker/sqs_queue.py` | `send_ingest_message` (producer) + `receive_messages` / `delete_message` (consumer) + DLQ helpers |
 | `app/worker/sqs_consumer.py` | Standalone long-polling SQS consumer that runs `PdfIngestor.ainvoke()` |
+| `app/worker/dlq_tool.py` | CLI to `list` / `redrive` dead-lettered ingest messages |
 
 ### Document Ingestion
 
-`POST /api/v1/documents/upload` → validates PDF (magic bytes) → uploads bytes to S3 (`{user_id}/{filename}` key) → inserts `Document` row (status=PROCESSING, `file_path` = S3 key) → sends an SQS message (`document_id`, `user_id`, `filename`, `s3_key`) → `app/worker/sqs_consumer.py` long-polls the queue and, per message, runs `PdfIngestor.ainvoke()`:
+`POST /api/v1/documents/upload` → validates PDF (magic bytes) → uploads bytes to S3 (`{user_id}/{filename}` key) → inserts `Document` row (status=PROCESSING, `file_path` = S3 key) → sends an SQS message (`document_id`, `user_id`, `filename`, `s3_key`) → `app/worker/sqs_consumer.py` long-polls the queue and, per message, runs `PdfIngestor.ainvoke(is_final_attempt=...)`:
 - Downloads the object from S3 into a temp file → `PyPDFLoader` → `RecursiveCharacterTextSplitter` (600 chars / 150 overlap)
 - `GoogleGenerativeAIEmbeddings` in batches of 10, with 5 s sleep between batches and tenacity retry on HTTP 429
 - Stores `chunks` rows with `Vector(768)` embeddings; HNSW index via Alembic DDL migration
-- On success, deletes the SQS message. On failure, the message is left in place — it becomes visible again after the visibility timeout and SQS's redrive policy moves it to the DLQ (`{SQS_QUEUE_NAME}-dlq`) after 5 receives.
+- On success, deletes the SQS message.
+- On failure, the message is left in place so SQS redelivers it — the consumer reads `ApproximateReceiveCount` and only marks the `Document` row `FAILED` when `attempt >= SQS_MAX_RECEIVE_COUNT` (the final attempt before redrive); earlier failures leave the row as `PROCESSING` since a retry is still pending. Once the max is reached, SQS's redrive policy moves the message to the DLQ (`{SQS_QUEUE_NAME}-dlq`) on its next failed receive.
+- Dead-lettered messages aren't silently lost: `python -m app.worker.dlq_tool list` inspects them, `python -m app.worker.dlq_tool redrive` re-queues them onto the main queue for a fresh attempt.
 
 ### Known Issues
 
@@ -111,4 +114,4 @@ START → upsert_thread → should_retrieve
 | FastAPI | uvicorn | 8000 |
 | SQS consumer | `python -m app.worker.sqs_consumer` | — |
 
-`scripts/localstack-init.sh` runs on localstack startup (mounted into `/etc/localstack/init/ready.d/`) and provisions the S3 bucket and SQS queue + DLQ with a redrive policy (max 5 receives).
+`scripts/localstack-init.sh` runs on localstack startup (mounted into `/etc/localstack/init/ready.d/`) and provisions the S3 bucket and SQS queue + DLQ with a redrive policy (`SQS_MAX_RECEIVE_COUNT`, default 5).

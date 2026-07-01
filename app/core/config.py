@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     SQS_QUEUE_NAME: str = "self-rag-ingest"
     SQS_POLL_WAIT_SECONDS: int = 20  # long polling
     SQS_VISIBILITY_TIMEOUT: int = 300
+    SQS_MAX_RECEIVE_COUNT: int = 5  # after this many deliveries, redrive policy moves the message to the DLQ
 
     EMBEDDING_DIM: int = 768  # Change to match your model (768 gemini, 1536 openai-small, 3072 openai-large)
     EMBEDDING_BATCH_SIZE: int = 10

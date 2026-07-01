@@ -5,6 +5,7 @@ BUCKET_NAME="${S3_BUCKET_NAME:-self-rag-documents}"
 QUEUE_NAME="${SQS_QUEUE_NAME:-self-rag-ingest}"
 DLQ_NAME="${QUEUE_NAME}-dlq"
 REGION="${AWS_REGION:-us-east-1}"
+MAX_RECEIVE_COUNT="${SQS_MAX_RECEIVE_COUNT:-5}"
 
 awslocal s3api create-bucket --bucket "$BUCKET_NAME" --region "$REGION"
 
@@ -14,6 +15,6 @@ DLQ_ARN=$(awslocal sqs get-queue-attributes --queue-url "$DLQ_URL" --attribute-n
 awslocal sqs create-queue \
   --queue-name "$QUEUE_NAME" \
   --region "$REGION" \
-  --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"${DLQ_ARN}\\\",\\\"maxReceiveCount\\\":\\\"5\\\"}\"}"
+  --attributes "{\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"${DLQ_ARN}\\\",\\\"maxReceiveCount\\\":\\\"${MAX_RECEIVE_COUNT}\\\"}\"}"
 
-echo "localstack init complete: bucket=$BUCKET_NAME queue=$QUEUE_NAME dlq=$DLQ_NAME"
+echo "localstack init complete: bucket=$BUCKET_NAME queue=$QUEUE_NAME dlq=$DLQ_NAME (maxReceiveCount=$MAX_RECEIVE_COUNT)"

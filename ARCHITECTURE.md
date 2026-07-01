@@ -178,17 +178,19 @@ POST /api/v1/documents/upload
   └─ sqs_queue.send_ingest_message()
           │
           └─ app.worker.sqs_consumer (long-polling loop)
-               └─ PdfIngestor.ainvoke()
+               └─ PdfIngestor.ainvoke(is_final_attempt=receive_count >= SQS_MAX_RECEIVE_COUNT)
                     ├─ Download object from S3 → temp file
                     ├─ PyPDFLoader.aload()
                     ├─ RecursiveCharacterTextSplitter (600 chars / 150 overlap)
                     ├─ GoogleGenerativeAIEmbeddings (batched, 10/batch, 5 s sleep between batches)
                     │   └─ tenacity retry on HTTP 429 (exponential back-off, max 5 attempts)
                     ├─ ChunkService.create_many() → chunks table (Vector(768))
-                    ├─ DocumentService.update(status=COMPLETED | FAILED)
+                    ├─ DocumentService.update(status=COMPLETED, or FAILED only if is_final_attempt)
                     └─ On success: delete SQS message. On failure: leave message —
-                       becomes visible again after the visibility timeout, moves to
-                       the DLQ after 5 receives (SQS redrive policy)
+                       becomes visible again after the visibility timeout; once
+                       ApproximateReceiveCount reaches SQS_MAX_RECEIVE_COUNT, SQS's
+                       redrive policy moves it to the DLQ on the next failed receive.
+                       app.worker.dlq_tool (list | redrive) inspects/replays DLQ messages.
 ```
 
 ---

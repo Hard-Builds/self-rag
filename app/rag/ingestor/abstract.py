@@ -59,7 +59,7 @@ class BaseIngestor(ABC):
             )
         return self._embedding_model
 
-    async def ainvoke(self):
+    async def ainvoke(self, is_final_attempt: bool = True):
         try:
             # Loading data
             docs = await self._load_documents()
@@ -77,10 +77,14 @@ class BaseIngestor(ABC):
         except Exception as exc:
             logger.error(f"Something went wrong while processing document "
                          f"{self.document_id} : {exc}")
-            await self._document_status_update(
-                status=DocumentStatusEnum.FAILED,
-                error_msg=str(exc)
-            )
+            # Only persist a terminal FAILED status once no further retries will
+            # happen (caller is out of attempts) — otherwise leave the row as
+            # PROCESSING since a retry is still pending.
+            if is_final_attempt:
+                await self._document_status_update(
+                    status=DocumentStatusEnum.FAILED,
+                    error_msg=str(exc)
+                )
             raise exc
 
     @abstractmethod
